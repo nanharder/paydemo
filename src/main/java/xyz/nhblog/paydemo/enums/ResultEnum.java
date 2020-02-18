@@ -34,7 +34,9 @@ public enum ResultEnum {
 
     ORDER_FINISH_SUCCESS(22, "订单完结成功"),
 
-    PRODUCT_STATUS_ERROR(23, "商品状态不正确")
+    PRODUCT_STATUS_ERROR(23, "商品状态不正确"),
+
+    WECHAT_MP_ERROR(24, "微信公众账号错误")
     ;
 
     private Integer code;
