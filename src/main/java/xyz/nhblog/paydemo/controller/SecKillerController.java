@@ -24,7 +24,8 @@ public class SecKillerController {
     @GetMapping("/order/{productId}")
     public String skill(@PathVariable String productId) throws Exception {
         log.info("@skill request, productId:" + productId);
-        secKillService.orderProductMockDiffUser(productId);
+        // TODO 从cookie中获取token再获取openid
+        secKillService.orderProductMockDiffUser("openid", productId);
         return secKillService.querySecKillProductInfo(productId);
     }
 }

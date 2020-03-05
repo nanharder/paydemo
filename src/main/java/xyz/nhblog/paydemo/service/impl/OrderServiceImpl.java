@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -23,10 +24,12 @@ import xyz.nhblog.paydemo.repository.OrderDetailRepository;
 import xyz.nhblog.paydemo.repository.OrderMasterRepository;
 import xyz.nhblog.paydemo.service.OrderService;
 import xyz.nhblog.paydemo.service.ProductService;
+import xyz.nhblog.paydemo.service.RankService;
 import xyz.nhblog.paydemo.utils.KeyUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +45,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     OrderDetailRepository orderDetailRepository;
+
+    @Autowired
+    RankService rankService;
 
     @Override
     @Transactional
@@ -83,6 +89,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(e -> new CartDTO(e.getProductId(), e.getProductQuantity()))
                 .collect(Collectors.toList());
         productService.decreaseStock(cartDTOList);
+        rankService.addSales(cartDTOList);
 
         return orderDTO;
     }
@@ -148,6 +155,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(e -> new CartDTO(e.getProductId(), e.getProductQuantity()))
                 .collect(Collectors.toList());
         productService.increaseStock(cartDTOList);
+        rankService.subSales(cartDTOList);
 
         //如果已支付，需要退款
         if (orderDTO.getPayStatus().equals(PayStatusEnum.SUCCESS.getCode())) {

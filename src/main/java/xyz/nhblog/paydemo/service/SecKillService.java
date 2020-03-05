@@ -14,6 +14,6 @@ public interface SecKillService {
      * @param productId
      * @return
      */
-    void orderProductMockDiffUser(String productId);
+    void orderProductMockDiffUser(String openid, String productId);
 
 }

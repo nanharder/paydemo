@@ -21,6 +21,7 @@ public class RedisLock {
      * @return
      */
     public boolean lock(String key, String value) {
+
         if (redisTemplate.opsForValue().setIfAbsent(key, value)) {
             return true;
         }

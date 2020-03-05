@@ -1,7 +1,9 @@
 package xyz.nhblog.paydemo.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import xyz.nhblog.paydemo.exception.SellException;
 import xyz.nhblog.paydemo.service.RedisLock;
 import xyz.nhblog.paydemo.service.SecKillService;
@@ -9,6 +11,8 @@ import xyz.nhblog.paydemo.utils.KeyUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SecKillServiceImpl implements SecKillService {
@@ -17,6 +21,9 @@ public class SecKillServiceImpl implements SecKillService {
 
     @Autowired
     private RedisLock redisLock;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     /**
      * 国庆活动，皮蛋粥特价，限量100000份
@@ -52,33 +59,41 @@ public class SecKillServiceImpl implements SecKillService {
     }
 
     @Override
-    public void orderProductMockDiffUser(String productId)
-    {
-        //加锁
-        long time = System.currentTimeMillis() + TIMEOUT;
-        if (redisLock.lock(productId, String.valueOf(time))) {
-            throw new SellException(101,  "人太多了，再尝试一次吧");
-        }
-
-
-        //1.查询该商品库存，为0则活动结束。
-        int stockNum = stock.get(productId);
-        if(stockNum == 0) {
-            throw new SellException(100,"活动结束");
-        }else {
-            //2.下单(模拟不同用户openid不同)
-            orders.put(KeyUtil.getUniqueKey(),productId);
-            //3.减库存
-            stockNum =stockNum-1;
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+    public void orderProductMockDiffUser(String openid, String productId) {
+        // 每个用户访问时加时间限制
+        String value = redisTemplate.opsForValue().get(openid);
+        if (StringUtils.isEmpty(value)) {
+            String uid = UUID.randomUUID().toString();
+            redisTemplate.opsForValue().set(openid, uid, 1, TimeUnit.SECONDS);
+            //加锁
+            long time = System.currentTimeMillis() + TIMEOUT;
+            if (redisLock.lock(productId, String.valueOf(time))) {
+                throw new SellException(101,  "人太多了，再尝试一次吧");
             }
-            stock.put(productId,stockNum);
+
+
+            //1.查询该商品库存，为0则活动结束。
+            int stockNum = stock.get(productId);
+            if(stockNum == 0) {
+                throw new SellException(100,"活动结束");
+            }else {
+                //2.下单(模拟不同用户openid不同)
+                orders.put(openid, productId);
+                //3.减库存
+                stockNum = stockNum-1;
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                stock.put(productId,stockNum);
+            }
+
+            //解锁
+            redisLock.unlock(productId, String.valueOf(time));
+        } else {
+            throw new SellException(102, "访问太频繁了");
         }
 
-        //解锁
-        redisLock.unlock(productId, String.valueOf(time));
     }
 }

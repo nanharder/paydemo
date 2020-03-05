@@ -1,5 +1,6 @@
 package xyz.nhblog.paydemo.utils;
 
+import java.util.Calendar;
 import java.util.Random;
 
 public class KeyUtil {
@@ -15,5 +16,13 @@ public class KeyUtil {
 
         return System.currentTimeMillis() + String.valueOf(a);
 
+    }
+
+    public static String getMonthKey() {
+        Calendar calendar = Calendar.getInstance();
+        StringBuffer sb = new StringBuffer();
+        sb.append(calendar.get(Calendar.YEAR));
+        sb.append(calendar.get(Calendar.MONTH));
+        return sb.toString();
     }
 }

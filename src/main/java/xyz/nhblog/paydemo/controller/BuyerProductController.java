@@ -13,6 +13,7 @@ import xyz.nhblog.paydemo.dataobject.ProductCategory;
 import xyz.nhblog.paydemo.dataobject.ProductInfo;
 import xyz.nhblog.paydemo.service.CategoryService;
 import xyz.nhblog.paydemo.service.ProductService;
+import xyz.nhblog.paydemo.service.RankService;
 import xyz.nhblog.paydemo.utils.ResultVOUtil;
 
 import java.util.ArrayList;
@@ -28,6 +29,9 @@ public class BuyerProductController {
 
     @Autowired
     CategoryService categoryService;
+
+    @Autowired
+    RankService rankService;
 
     @GetMapping("/list")
     //@Cacheable(cacheNames = "product", key = "123")
@@ -59,6 +63,18 @@ public class BuyerProductController {
         }
 
         return ResultVOUtil.success(productVOList);
+    }
+
+    @GetMapping("/rank")
+    public ResultVO rank() {
+        List<ProductInfo> productInfoList = rankService.getRank();
+        List<ProductInfoVO> productInfoVOList = new ArrayList<>();
+        for (ProductInfo productInfo: productInfoList) {
+            ProductInfoVO productInfoVO = new ProductInfoVO();
+            BeanUtils.copyProperties(productInfo, productInfoVO);
+            productInfoVOList.add(productInfoVO);
+        }
+        return ResultVOUtil.success(productInfoVOList);
     }
 
 }

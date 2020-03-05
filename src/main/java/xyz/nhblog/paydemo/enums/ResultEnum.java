@@ -36,7 +36,11 @@ public enum ResultEnum {
 
     PRODUCT_STATUS_ERROR(23, "商品状态不正确"),
 
-    WECHAT_MP_ERROR(24, "微信公众账号错误")
+    WECHAT_MP_ERROR(24, "微信公众账号错误"),
+
+    LOGIN_FAIL(25, "登陆失败， 登陆信息不正确"),
+
+    LOGOUT_SUCCESS(26, "登出成功"),
     ;
 
     private Integer code;
