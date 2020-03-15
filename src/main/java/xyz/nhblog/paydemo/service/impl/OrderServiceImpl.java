@@ -22,6 +22,7 @@ import xyz.nhblog.paydemo.enums.ResultEnum;
 import xyz.nhblog.paydemo.exception.SellException;
 import xyz.nhblog.paydemo.repository.OrderDetailRepository;
 import xyz.nhblog.paydemo.repository.OrderMasterRepository;
+import xyz.nhblog.paydemo.service.OrderSender;
 import xyz.nhblog.paydemo.service.OrderService;
 import xyz.nhblog.paydemo.service.ProductService;
 import xyz.nhblog.paydemo.service.RankService;
@@ -48,6 +49,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     RankService rankService;
+
+    @Autowired
+    OrderSender orderSender;
 
     @Override
     @Transactional
@@ -90,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
         productService.decreaseStock(cartDTOList);
         rankService.addSales(cartDTOList);
-
+        orderSender.send(orderDTO.getOrderId());
         return orderDTO;
     }
 
