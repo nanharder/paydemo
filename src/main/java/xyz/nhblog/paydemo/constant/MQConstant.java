@@ -5,11 +5,19 @@ public interface MQConstant {
 
     String DELAY_EXCHANGE = "paydemo.delay.exchange";
 
-    String DELAY_ROUTING_KEY = "paydemo.order";
+    String DELAY_ROUTING_KEY = "paydemo.delay";
 
-    String QUEUE = "paydemo.queue";
+    String VERIFY_QUEUE = "paydemo.verify.queue";
 
-    String EXCHANGE = "paydemo.exchange";
+    String ORDER_EXCHANGE = "paydemo.order.exchange";
 
-    String ROUTING_KEY = "all";
+    String VERIFY_ROUTING_KEY = "paydemo.verify";
+
+    String NEW_QUEUE = "paydemo.newOrder.queue";
+
+    String NEW_ROUTING_KEY = "paydemo.newOrder";
+
+    String CANCEL_QUEUE = "paydemo.cancel.queue";
+
+    String CANCEL_ROUTING_KEY = "paydemo.cancel";
 }

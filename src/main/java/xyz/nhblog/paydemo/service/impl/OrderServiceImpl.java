@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -29,8 +28,6 @@ import xyz.nhblog.paydemo.service.RankService;
 import xyz.nhblog.paydemo.utils.KeyUtil;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,12 +86,10 @@ public class OrderServiceImpl implements OrderService {
         orderMasterRepository.save(orderMaster);
 
         //4.扣库存
-        List<CartDTO> cartDTOList = orderDTO.getOrderDetailList().stream()
-                .map(e -> new CartDTO(e.getProductId(), e.getProductQuantity()))
-                .collect(Collectors.toList());
-        productService.decreaseStock(cartDTOList);
-        rankService.addSales(cartDTOList);
-        orderSender.send(orderDTO.getOrderId());
+        orderSender.sendOrder(orderDTO);
+
+        //将orderId保存到延迟队列
+        orderSender.verifyPaid(orderDTO.getOrderId());
         return orderDTO;
     }
 
@@ -150,21 +145,13 @@ public class OrderServiceImpl implements OrderService {
             log.error("取消订单 订单更新失败, orderMaster={}", orderMaster);
             throw new SellException(ResultEnum.ORDER_UPDATE_ERROR);
         }
+
         //返回库存
         if (CollectionUtils.isEmpty(orderDTO.getOrderDetailList())) {
             log.error("取消订单 订单中无商品详情, orderDTO={}", orderDTO);
             throw new SellException(ResultEnum.ORDER_DETAIL_EMPTY);
         }
-        List<CartDTO> cartDTOList = orderDTO.getOrderDetailList().stream()
-                .map(e -> new CartDTO(e.getProductId(), e.getProductQuantity()))
-                .collect(Collectors.toList());
-        productService.increaseStock(cartDTOList);
-        rankService.subSales(cartDTOList);
-
-        //如果已支付，需要退款
-        if (orderDTO.getPayStatus().equals(PayStatusEnum.SUCCESS.getCode())) {
-            //TODO
-        }
+        orderSender.cancelOrder(orderDTO);
         return orderDTO;
     }
 

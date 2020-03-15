@@ -4,8 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2XmlMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import xyz.nhblog.paydemo.constant.MQConstant;
@@ -31,8 +29,8 @@ public class AmqConfig {
     @Bean
     public Queue delayProcessQueue() {
         Map<String, Object> params = new HashMap<>();
-        params.put("x-dead-letter-exchange", MQConstant.EXCHANGE);
-        params.put("x-dead-letter-routing-key", MQConstant.ROUTING_KEY);
+        params.put("x-dead-letter-exchange", MQConstant.ORDER_EXCHANGE);
+        params.put("x-dead-letter-routing-key", MQConstant.VERIFY_ROUTING_KEY);
         return new Queue(MQConstant.DELAY_QUEUE, true, false, false, params);
     }
 
@@ -48,16 +46,36 @@ public class AmqConfig {
 
     @Bean
     public Queue deadQueue() {
-        return new Queue(MQConstant.QUEUE, true);
+        return new Queue(MQConstant.VERIFY_QUEUE, true);
     }
 
     @Bean
-    public TopicExchange topicExchange() {
-        return new TopicExchange(MQConstant.EXCHANGE);
+    public DirectExchange orderExchange() {
+        return new DirectExchange(MQConstant.ORDER_EXCHANGE);
     }
 
     @Bean
     public Binding deadBinding() {
-        return BindingBuilder.bind(deadQueue()).to(topicExchange()).with(MQConstant.ROUTING_KEY);
+        return BindingBuilder.bind(deadQueue()).to(orderExchange()).with(MQConstant.VERIFY_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue newOrderQueue() {
+        return new Queue(MQConstant.NEW_QUEUE, true);
+    }
+
+    @Bean
+    public Binding newOrderBinding() {
+        return BindingBuilder.bind(newOrderQueue()).to(orderExchange()).with(MQConstant.NEW_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue cancelQueue() {
+        return new Queue(MQConstant.CANCEL_QUEUE, true);
+    }
+
+    @Bean
+    public Binding cancelBinding() {
+        return BindingBuilder.bind(cancelQueue()).to(orderExchange()).with(MQConstant.CANCEL_ROUTING_KEY);
     }
 }
